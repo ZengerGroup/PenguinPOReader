@@ -43,7 +43,7 @@ namespace PenguinPOReader
         {
             Title = Regex.Match(pdfText, @"(?<=Title - Short:)(.*?)(?=\s{2,})").Value.Trim();
             PO = Regex.Match(pdfText, @"(?<=\s+)\d*(?=/\d{2}/\d{2}/\d{4}\s{2,})").Value.Trim();
-            Date = Regex.Match(pdfText, @"(?<=Delivery date\s*)\d{2}/\d{2}/\d{4}(?=\s{2,})").Value.Trim();
+            Date = DateTime.Parse(Regex.Match(pdfText, @"(?<=Component Del Date:\s*)(.*?)(?=\s{2,})").Value.Trim()).AddDays(-2).ToString("MM/dd/yyyy");
             Quantity = Regex.Match(pdfText, @"^*[0-9]*?\,*?[0-9]{1,3} Each").Value.Trim().Split(" ")[0];
             ISBN = Regex.Match(pdfText, @"(\s){3,}ISBN: [0-9]*").Value.Split(":")[1].Trim();
             Color = GetColor(pdfText);
