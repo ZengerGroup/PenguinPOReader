@@ -20,6 +20,8 @@ namespace PenguinPOReader
         public string Coat;
         public string Binder;
         public string Status;
+        public string Buyer;
+        public string Imprint;
         public bool HardCover;
         public PdfReader(string path)
         {
@@ -48,6 +50,10 @@ namespace PenguinPOReader
             ISBN = Regex.Match(pdfText, @"(\s){3,}ISBN: [0-9]*").Value.Split(":")[1].Trim();
             Color = GetColor(pdfText);
             Stock = Regex.Match(pdfText, @"(?<=Vendor Suppl Cv/Jk Stock:\s*)(.*?)(?=\s{2,})").Value.Trim();
+            if (Regex.Match(pdfText, @"(?<=Cvr with Flap:\s*)(.*?)(?=\s{2,})").Value.Trim() == "Yes") Stock = String.Format("{0}: {1}",
+                Regex.Match(pdfText, @"(?<=Scored/Perf Flaps:\s*)(.*?)(?=\s{2,})").Value.Trim(), Stock);
+            Buyer = Regex.Match(pdfText, @"(?<=Production Manager:\s*)(.*?)(?=\s{2,})").Value.Trim();
+            Imprint = Regex.Match(pdfText, @"(?<=Imprint:\s*)(.*?)(?=\s{2,})").Value.Trim();
             Coat = Regex.Match(pdfText, @"(?<=Coat 1:)(.*?)(?=\s{2,})").Value.Trim();
             Binder = Regex.Match(pdfText, @"(?<=Binder:\s*)(.*?)(?=\s{2,})").Value.Trim();
             HardCover = Regex.Match(pdfText, @"(?<=Format:\s+)(\b[\w\s]+\b)(?=\s{2,})").Value.Contains("Hardcover");

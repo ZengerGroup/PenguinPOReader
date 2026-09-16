@@ -63,7 +63,7 @@ namespace PenguinPOReader
                 if (row == String.Empty) Logger.ErrorExit(["Unable to determine last used row."], 14);
                 var valueRange = new ValueRange();
                 valueRange.Values = new List<IList<object>> { GetRowData(reader) };
-                var updateRequest = Sheets.Spreadsheets.Values.Update(valueRange, Configurator.SheetId, String.Format("{0}!A{1}:L{1}", sheetName, row));
+                var updateRequest = Sheets.Spreadsheets.Values.Update(valueRange, Configurator.SheetId, String.Format("{0}!A{1}:N{1}", sheetName, row));
                 updateRequest.ValueInputOption = SpreadsheetsResource.ValuesResource.UpdateRequest.ValueInputOptionEnum.USERENTERED;
                 var appendResponse = updateRequest.Execute();
             }
@@ -91,7 +91,7 @@ namespace PenguinPOReader
         {
             return new List<object>
             {
-                DateTime.Now.ToString("MM/dd"), reader.PO, "", reader.Quantity, reader.ISBN, reader.Title, reader.Color, reader.Stock, reader.Coat, 
+                DateTime.Now.ToString("MM/dd"), reader.PO, reader.Buyer, reader.Imprint, "", reader.Quantity, reader.ISBN, reader.Title, reader.Color, reader.Stock, reader.Coat, 
                 reader.Binder, reader.Status, reader.Date
             };
         }
