@@ -11,5 +11,6 @@ namespace PenguinPOReader
         public static string IssuePath = ConfigurationManager.AppSettings["IssuePath"];
         public static string CredentialsPath = ConfigurationManager.AppSettings["Credentials"];
         public static string SheetId = ConfigurationManager.AppSettings["SheetId"];
+        public static string CsrDefault = ConfigurationManager.AppSettings["CsrDefault"];
     }
 }

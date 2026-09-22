@@ -12,7 +12,7 @@
             else Workbook.SetupApi();
             Logger.WriteLog("Begining to work on: {0}", true, args[0]);
             PdfReader Reader = new PdfReader(args[0]);
-            Workbook.Update(Reader);
+            Workbook.UpdateWorkbook(Reader);
         }
     }
 }

@@ -29,7 +29,7 @@ namespace PenguinPOReader
         }
         public static void ErrorExit(string[] message, int code)
         {
-            GenerateIssueJson("N/A", message[0], "Error");
+            //GenerateIssueJson("N/A", message[0], "Error");
             WriteLog(message[0], true);
             string longMessage = "";
             for (int i = 0; i < message.Length; i++)

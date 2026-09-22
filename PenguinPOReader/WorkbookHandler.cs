@@ -2,6 +2,7 @@
 using Google.Apis.Services;
 using Google.Apis.Sheets.v4;
 using Google.Apis.Sheets.v4.Data;
+using Spire.Pdf.Security;
 using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
@@ -54,30 +55,101 @@ namespace PenguinPOReader
                 Logger.ErrorExit([e.Message], 15);
             }
         }
-        public void Update(PdfReader reader)
+        private async Task<bool> UpdateRange(List<IList<object>> data, string cellRange)
         {
             try
             {
-                string sheetName = (reader.HardCover) ? "Jackets" : "Covers";
-                string row = GetRow(sheetName).Result;
-                if (row == String.Empty) Logger.ErrorExit(["Unable to determine last used row."], 14);
                 var valueRange = new ValueRange();
-                valueRange.Values = new List<IList<object>> { GetRowData(reader) };
-                var updateRequest = Sheets.Spreadsheets.Values.Update(valueRange, Configurator.SheetId, String.Format("{0}!A{1}:N{1}", sheetName, row));
+                valueRange.Values = data;
+                var updateRequest = Sheets.Spreadsheets.Values.Update(valueRange, Configurator.SheetId, cellRange);
                 updateRequest.ValueInputOption = SpreadsheetsResource.ValuesResource.UpdateRequest.ValueInputOptionEnum.USERENTERED;
                 var appendResponse = updateRequest.Execute();
+                return appendResponse.UpdatedCells > 0;
+            }
+            catch (Exception e)
+            {
+                Logger.ErrorExit(["Failed to write to spreadsheet.", e.Message], 400);
+                return false;
+            }
+        }
+        private void AddRow(List<IList<object>>[] data)
+        {
+            if (UpdateRange(data[0], String.Format("Jobs!A{0}:N{0}", GetNewRow("Jobs").Result)).Result)
+            {
+                if (UpdateRange(data[1], String.Format("Reporting!A{0}:N{0}", GetNewRow("Reporting").Result)).Result)
+                    Logger.Display("Update Successful", false);
+                else Logger.Display("Failed to update reporting tab.", false);
+            }
+            else Logger.Display("Failed to update sheet.", false);
+        }
+        private void UpdateRow(List<IList<object>>[] data, string reportingRow, string jobRow)
+        {
+            if (UpdateRange(data[0], String.Format("Jobs!D{0}:G{0}", jobRow)).Result &&
+                UpdateRange(data[1], String.Format("Jobs!J{0}:K{0}", jobRow)).Result)
+            {
+                if (UpdateRange(data[2], String.Format("Reporting!A{0}:L{0}", reportingRow)).Result)
+                    Logger.WriteLog("Update Successful", false);
+                else Logger.WriteLog("Failed to update reporting tab.", false);
+            }
+            else Logger.Display("Failed to update sheet.", false);
+        }
+        private async Task<string> GetReportingRow(string po)
+        {
+            try
+            {
+                SpreadsheetsResource.ValuesResource.GetRequest request = Sheets.Spreadsheets.Values.Get(Configurator.SheetId, $"Reporting!A:A");
+                ValueRange response = await request.ExecuteAsync();
+                IList<IList<object>> values = response.Values;
+                int matchedRow = -1;
+                if (values != null & values.Count > 0)
+                {
+                    var columnValues = values.Select(row => row.FirstOrDefault() ?? "").ToArray();
+                    for (int i = 0; i < columnValues.Length; i++) if ((string)columnValues[i] == po) matchedRow = i;
+                }
+                if (matchedRow >= 0)
+                {
+                    Logger.WriteLog("Found match for PO: {0}", false, po);
+                    return (matchedRow + 1).ToString();
+                }
+                Logger.WriteLog("Did not find match for PO: {0}", false, po);
+                return null;
             }
             catch
             {
-                Logger.ErrorExit(["Failed to update spreadsheet!"], 13);
+                Logger.WriteLog("Failed to read sheet.", false);
+                return null;
             }
         }
-        private async Task<string> GetRow(string sheetName)
+        private async Task<string> GetJobRow(string po)
+        {
+            try
+            {
+                SpreadsheetsResource.ValuesResource.GetRequest request = Sheets.Spreadsheets.Values.Get(Configurator.SheetId, $"Jobs!B:B");
+                ValueRange response = await request.ExecuteAsync();
+                IList<IList<object>> values = response.Values;
+                int matchedRow = -1;
+                if (values != null & values.Count > 0)
+                {
+                    var columnValues = values.Select(row => row.FirstOrDefault() ?? "").ToArray();
+                    for (int i = 0; i < columnValues.Length; i++) if ((string)columnValues[i] == po) matchedRow = i;
+                }
+                if (matchedRow >= 0) return (matchedRow + 1).ToString();
+                Logger.WriteLog("Failed to find match for PO: {0}. Please check sheet.", false, po);
+                return null;
+            }
+            catch
+            {
+                Logger.WriteLog("Failed to connect to workbook. Please update manually.", false);
+                return null;
+            }
+
+        }
+        private async Task<string> GetNewRow(string sheetName)
         {
             try
             {
                 SpreadsheetsResource.ValuesResource.GetRequest request = Sheets.Spreadsheets.Values.Get(Configurator.SheetId, $"{sheetName}!A:A");
-                ValueRange response = await request.ExecuteAsync();
+                ValueRange response = request.ExecuteAsync().Result;
                 IList<IList<object>> values = response.Values;
                 if (values != null & values.Count > 0) return (values.Count + 1).ToString();
                 else return String.Empty;
@@ -87,13 +159,18 @@ namespace PenguinPOReader
                 return String.Empty;
             }
         }
-        private List<object> GetRowData(PdfReader reader)
+        public void UpdateWorkbook(PdfReader reader)
         {
-            return new List<object>
+            try
             {
-                DateTime.Now.ToString("MM/dd"), reader.PO, reader.Buyer, reader.Imprint, "", reader.Quantity, reader.ISBN, reader.Title, reader.Color, reader.Stock, reader.Coat, 
-                reader.Binder, reader.Status, reader.Date
-            };
+                string reportingRow = GetReportingRow(reader.PO).Result;
+                if (reportingRow != null) UpdateRow(reader.UpdateRowData, reportingRow, GetJobRow(reader.PO).Result);
+                else AddRow(reader.AddRowData);
+            }
+            catch
+            {
+                Logger.ErrorExit(["Failed to update spreadsheet!"], 130);
+            }
         }
     }
 }
