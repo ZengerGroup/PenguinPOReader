@@ -26,7 +26,7 @@ namespace PenguinPOReader
         public string PrintNumber;
         public string PriceUS;
         public string PriceCAN;
-        public bool HardCover;
+        public string Format;
         public List<IList<object>>[] AddRowData 
         {
             get 
@@ -34,9 +34,9 @@ namespace PenguinPOReader
                 return 
                     [
                     new List<IList<object>>{ new List<object> { DateTime.Now.ToString("MM/dd"), PO, "", Buyer, Quantity, ISBN, Title, Color, Stock, Coat,
-                    Binder, Status, Date, Date }}, 
+                    Binder, Status, Date, "" }}, 
                     new List<IList<object>>{ new List<object> { PO, Title, Author, ISBN, Imprint, PrintNumber, Buyer, Quantity, 
-                        PriceUS, PriceCAN, Binder, Configurator.CsrDefault, "", ""}}
+                        PriceUS, PriceCAN, Binder, Configurator.CsrDefault, "", "", Format}}
                     ];
             }
         }
@@ -50,7 +50,8 @@ namespace PenguinPOReader
                     new List<IList<object>>{ new List<object> { Buyer, Quantity, ISBN, Title }},
                     new List<IList<object>>{ new List<object> { Coat, Binder} },
                     new List<IList<object>>{ new List<object> { PO, Title, Author, ISBN, Imprint, PrintNumber, Buyer, Quantity, PriceUS, 
-                        PriceCAN, Binder, Configurator.CsrDefault} }
+                        PriceCAN, Binder, Configurator.CsrDefault} },
+                    new List<IList<object>>{ new List<object> { Format } }
                     ];
             }
         }
@@ -80,14 +81,12 @@ namespace PenguinPOReader
             Quantity = Regex.Match(pdfText, @"^*[0-9]*?\,*?[0-9]{1,3} Each").Value.Trim().Split(" ")[0];
             ISBN = Regex.Match(pdfText, @"(\s){3,}ISBN: [0-9]*").Value.Split(":")[1].Trim();
             Color = GetColor(pdfText);
-            Stock = Regex.Match(pdfText, @"(?<=Vendor Suppl Cv/Jk Stock:\s*)(.*?)(?=\s{2,})").Value.Trim();
-            if (Regex.Match(pdfText, @"(?<=Cvr with Flap:\s*)(.*?)(?=\s{2,})").Value.Trim() == "Yes") Stock = String.Format("{0}: {1}",
-                Regex.Match(pdfText, @"(?<=Scored/Perf Flaps:\s*)(.*?)(?=\s{2,})").Value.Trim(), Stock);
+            Stock = GetStock(pdfText);
             Buyer = Regex.Match(pdfText, @"(?<=Production Manager:\s*)(.*?)(?=\s{2,})").Value.Trim();
             Imprint = Regex.Match(pdfText, @"(?<=Imprint:\s*)(.*?)(?=\s{2,})").Value.Trim();
             Coat = Regex.Match(pdfText, @"(?<=Coat 1:)(.*?)(?=\s{2,})").Value.Trim();
             Binder = Regex.Match(pdfText, @"(?<=Binder:\s*)(.*?)(?=\s{2,})").Value.Trim();
-            HardCover = Regex.Match(pdfText, @"(?<=Format:\s+)(\b[\w\s]+\b)(?=\s{2,})").Value.Contains("Hardcover");
+            Format = Regex.Match(pdfText, @"(?<=Format:\s+)(.*?)(?=\s{2,})").Value.Trim();
             Author = Regex.Match(pdfText, @"(?<=Contrib1:\s*)(.*?)(?=\s{2,})").Value.Trim();
             PrintNumber = Regex.Match(pdfText, @"(?<=Printing Number:\s*)(.*?)(?=\s{2,})").Value.Trim();
             PriceUS = Regex.Match(pdfText, @"(?<=Retail Price USA:\s*)(.*?)(?=\s{2,})").Value.Trim();
@@ -106,6 +105,13 @@ namespace PenguinPOReader
             if (dayString == "Sunday") return poDateTime.AddDays(-3).ToString("MM/dd/yyyy");
             else return poDateTime.AddDays(-1).ToString("MM/dd/yyyy");
         }
-        
+        private string GetStock(string pdfText)
+        {
+            string stock = Regex.Match(pdfText, @"(?<=Vendor Suppl Cv/Jk Stock:\s*)(.*?)(?=\s{2,})").Value.Trim();
+            if (Regex.Match(pdfText, @"(?<=Cvr with Flap:\s*)(.*?)(?=\s{2,})").Value.Trim() == "Yes") stock = String.Format("F: {0}", stock);
+            if (Regex.Match(pdfText, @"(?<=Jacket:\s*)(.*?)(?=\s{2,})").Value.Trim() == "Yes") stock = String.Format("J: {0}", stock);
+            //ABOVE: Adjust check, if "Jacket: yes" prefix J:, if "...Flaps: Yes" prefix F:
+            return stock;
+        }
     }
 }

@@ -76,7 +76,7 @@ namespace PenguinPOReader
         {
             if (UpdateRange(data[0], String.Format("Jobs!A{0}:N{0}", GetNewRow("Jobs").Result)).Result)
             {
-                if (UpdateRange(data[1], String.Format("Reporting!A{0}:N{0}", GetNewRow("Reporting").Result)).Result)
+                if (UpdateRange(data[1], String.Format("Reporting!A{0}:O{0}", GetNewRow("Reporting").Result)).Result)
                     Logger.Display("Update Successful", false);
                 else Logger.Display("Failed to update reporting tab.", false);
             }
@@ -87,7 +87,8 @@ namespace PenguinPOReader
             if (UpdateRange(data[0], String.Format("Jobs!D{0}:G{0}", jobRow)).Result &&
                 UpdateRange(data[1], String.Format("Jobs!J{0}:K{0}", jobRow)).Result)
             {
-                if (UpdateRange(data[2], String.Format("Reporting!A{0}:L{0}", reportingRow)).Result)
+                if (UpdateRange(data[2], String.Format("Reporting!A{0}:L{0}", reportingRow)).Result &&
+                    UpdateRange(data[3], String.Format("Reporting!O{0}:O{0}", reportingRow)).Result)
                     Logger.WriteLog("Update Successful", false);
                 else Logger.WriteLog("Failed to update reporting tab.", false);
             }
