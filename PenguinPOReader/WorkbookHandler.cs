@@ -74,7 +74,7 @@ namespace PenguinPOReader
         }
         private void AddRow(List<IList<object>>[] data)
         {
-            if (UpdateRange(data[0], String.Format("Jobs!A{0}:M{0}", GetNewRow("Jobs").Result)).Result)
+            if (UpdateRange(data[0], String.Format("Jobs!A{0}:P{0}", GetNewRow("Jobs").Result)).Result)
             {
                 if (UpdateRange(data[1], String.Format("Reporting!A{0}:O{0}", GetNewRow("Reporting").Result)).Result)
                     Logger.Display("Update Successful", false);

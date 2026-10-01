@@ -102,7 +102,9 @@ namespace PenguinPOReader
         }
         private string GetDeliveryDate(string poDate)
         {
-            DateTime poDateTime = DateTime.Parse(poDate);
+            DateTime poDateTime;
+            if (!DateTime.TryParse(poDate, out poDateTime)) return "UNKNOWN";
+            //= DateTime.Parse(poDate);
             string dayString = poDateTime.AddDays(-1).ToString("dddd");
             if (dayString == "Sunday") return poDateTime.AddDays(-3).ToString("MM/dd/yyyy");
             else return poDateTime.AddDays(-1).ToString("MM/dd/yyyy");
