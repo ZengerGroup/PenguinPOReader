@@ -18,7 +18,8 @@ namespace PenguinPOReader
         public string Author;
         public string Color;
         public string Stock;
-        public string Coat;
+        public string Coat1;
+        public string Coat2;
         public string Binder;
         public string Status;
         public string Buyer;
@@ -33,8 +34,8 @@ namespace PenguinPOReader
             {
                 return 
                     [
-                    new List<IList<object>>{ new List<object> { DateTime.Now.ToString("MM/dd"), PO, "", Buyer, Quantity, ISBN, Title, Color, Stock, Coat,
-                    Binder, Status, Date, "" }}, 
+                    new List<IList<object>>{ new List<object> { DateTime.Now.ToString("MM/dd"), PO, "", Buyer, Quantity, ISBN, Title, Color, Stock, Coat1,
+                    Coat2, Binder, Status, Date, "" }}, 
                     new List<IList<object>>{ new List<object> { PO, Title, Author, ISBN, Imprint, PrintNumber, Buyer, Quantity, 
                         PriceUS, PriceCAN, Binder, Configurator.CsrDefault, "", "", Format}}
                     ];
@@ -48,7 +49,7 @@ namespace PenguinPOReader
                     [
                     //B to 
                     new List<IList<object>>{ new List<object> { Buyer, Quantity, ISBN, Title }},
-                    new List<IList<object>>{ new List<object> { Coat, Binder} },
+                    new List<IList<object>>{ new List<object> { Coat1, Coat2, Binder} },
                     new List<IList<object>>{ new List<object> { PO, Title, Author, ISBN, Imprint, PrintNumber, Buyer, Quantity, PriceUS, 
                         PriceCAN, Binder, Configurator.CsrDefault} },
                     new List<IList<object>>{ new List<object> { Format } }
@@ -84,7 +85,8 @@ namespace PenguinPOReader
             Stock = GetStock(pdfText);
             Buyer = Regex.Match(pdfText, @"(?<=Production Manager:\s*)(.*?)(?=\s{2,})").Value.Trim();
             Imprint = Regex.Match(pdfText, @"(?<=Imprint:\s*)(.*?)(?=\s{2,})").Value.Trim();
-            Coat = Regex.Match(pdfText, @"(?<=Coat 1:)(.*?)(?=\s{2,})").Value.Trim();
+            Coat1 = Regex.Match(pdfText, @"(?<=Coat 1:)(.*?)(?=\s{2,})").Value.Trim();
+            Coat2 = Regex.Match(pdfText, @"(?<=Coat 2:)(.*?)(?=\s{2,})").Value.Trim();
             Binder = Regex.Match(pdfText, @"(?<=Binder:\s*)(.*?)(?=\s{2,})").Value.Trim();
             Format = Regex.Match(pdfText, @"(?<=Format:\s+)(.*?)(?=\s{2,})").Value.Trim();
             Author = Regex.Match(pdfText, @"(?<=Contrib1:\s*)(.*?)(?=\s{2,})").Value.Trim();
