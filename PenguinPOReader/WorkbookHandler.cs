@@ -23,7 +23,7 @@ namespace PenguinPOReader
         {
             serviceCredentials = CredentialFactory.FromJson<ServiceAccountCredential>(File.ReadAllText(Configurator.CredentialsPath));
             googleCredentials = GoogleCredential.FromServiceAccountCredential(serviceCredentials);
-            scopedCredentials = googleCredentials.CreateScoped(Google.Apis.Sheets.v4.SheetsService.Scope.Spreadsheets);
+            scopedCredentials = googleCredentials.CreateScoped(SheetsService.Scope.Spreadsheets);
         }
         public async Task<bool> VerifyConnection()
         {
@@ -76,7 +76,7 @@ namespace PenguinPOReader
         {
             if (UpdateRange(data[0], String.Format("Jobs!A{0}:P{0}", GetNewRow("Jobs").Result)).Result)
             {
-                if (UpdateRange(data[1], String.Format("Reporting!A{0}:O{0}", GetNewRow("Reporting").Result)).Result)
+                if (UpdateRange(data[1], String.Format("TO_Reporting!A{0}:O{0}", GetNewRow("TO_Reporting").Result)).Result)
                     Logger.Display("Update Successful", false);
                 else Logger.Display("Failed to update reporting tab.", false);
             }
@@ -87,8 +87,8 @@ namespace PenguinPOReader
             if (UpdateRange(data[0], String.Format("Jobs!D{0}:G{0}", jobRow)).Result &&
                 UpdateRange(data[1], String.Format("Jobs!J{0}:L{0}", jobRow)).Result)
             {
-                if (UpdateRange(data[2], String.Format("Reporting!A{0}:L{0}", reportingRow)).Result &&
-                    UpdateRange(data[3], String.Format("Reporting!O{0}:O{0}", reportingRow)).Result)
+                if (UpdateRange(data[2], String.Format("TO_Reporting!A{0}:L{0}", reportingRow)).Result &&
+                    UpdateRange(data[3], String.Format("TO_Reporting!O{0}:O{0}", reportingRow)).Result)
                     Logger.WriteLog("Update Successful", false);
                 else Logger.WriteLog("Failed to update reporting tab.", false);
             }
@@ -98,7 +98,7 @@ namespace PenguinPOReader
         {
             try
             {
-                SpreadsheetsResource.ValuesResource.GetRequest request = Sheets.Spreadsheets.Values.Get(Configurator.SheetId, $"Reporting!A:A");
+                SpreadsheetsResource.ValuesResource.GetRequest request = Sheets.Spreadsheets.Values.Get(Configurator.SheetId, $"TO_Reporting!A:A");
                 ValueRange response = await request.ExecuteAsync();
                 IList<IList<object>> values = response.Values;
                 int matchedRow = -1;
@@ -152,11 +152,20 @@ namespace PenguinPOReader
                 SpreadsheetsResource.ValuesResource.GetRequest request = Sheets.Spreadsheets.Values.Get(Configurator.SheetId, $"{sheetName}!A:A");
                 ValueRange response = request.ExecuteAsync().Result;
                 IList<IList<object>> values = response.Values;
-                if (values != null & values.Count > 0) return (values.Count + 1).ToString();
-                else return String.Empty;
+                if (values != null & values.Count > 0)
+                {
+                    Logger.WriteLog("New Row Number: {0}", false, (values.Count + 1).ToString());
+                    return (values.Count + 1).ToString();
+                }
+                else
+                {
+                    Logger.ErrorExit(["Failed to read reporting rows."], 303);
+                    return String.Empty;
+                }
             }
-            catch
+            catch (Exception e)
             {
+                Logger.ErrorExit(["Failed to write to reporting sheet.", e.Message], 304);
                 return String.Empty;
             }
         }
